@@ -29,10 +29,10 @@ const buttonMapping = {
 
 
 const ssurlp = 'https://spreadsheets.google.com/feeds/list/1-StkrwSEzLoA5s3AlcRp0RGJlSyU4_uwf4sz9fOB2yE/4/public/values?alt=json';
-const ssurlloc = 'https://spreadsheets.google.com/feeds/list/1g4CAWGxpcj9CbwMNY_A5BGtmSlZ8bbMdexVREEyJXOU/2/public/values?alt=json';
+const ssurlloc = 'https://spreadsheets.google.com/feeds/list/1-StkrwSEzLoA5s3AlcRp0RGJlSyU4_uwf4sz9fOB2yE/2/public/values?alt=json';
 const ssurllocmap = 'https://spreadsheets.google.com/feeds/list/1-StkrwSEzLoA5s3AlcRp0RGJlSyU4_uwf4sz9fOB2yE/3/public/values?alt=json';
 
-const exeurl = 'https://script.google.com/macros/s/AKfycbxiLkwaCbVOkHBkk-38Nd69QkzvRswegF3KyCHhxHQdyHwmbmo/exec';
+const exeurl = 'https://script.google.com/macros/s/AKfycbxCm1DwMr4aguILPVMg9-L9Wh5GPT2JijZE_Fe2JDnbFaL6kuE/exec';
 const bgpath = 'assets/img/bg.jpg';
 
 const dot = new DOT(400,300);
@@ -72,22 +72,17 @@ var exportval='';
 
 var feedback='';
 
+var locstate =[];
+var loccountry =[];
+var locplace =[];
 
-
-
-function preload() {
-  
-  loadJSON(ssurlloc, encodeloc);
-  loadJSON(ssurlp, encodep);
-  loadJSON(ssurllocmap, encodelocmap);
-}
 function encodelocmap(data){
       let vs = [];
 
       for (let i = 0; i < data.feed.entry.length; i+=1) {
         let val=[]
         let vlist = data.feed.entry[i].content.$t.split(',');
-        console.log(vlist.length);
+        //console.log(vlist.length);
         for(let j=0; j<vlist.length; j+=1){
             let v=vlist[j];
             val.push(int(v.split(': ')[1]));
@@ -100,43 +95,76 @@ function encodelocmap(data){
 }
 
 function encodeloc(data){
-  		let vs = [];
+      let vallocnum = [];
 
   		for (let i = 0; i < data.feed.entry.length; i+=1) {
-    		let p = {   "x": int(data.feed.entry[i].gsx$座標x.$t),
-                		"y": int(data.feed.entry[i].gsx$座標y.$t)
-            		};
-    		let  v= {
-                		"position": p,
-                		"diameter": int(data.feed.entry[i].gsx$範圍.$t),
-                		"descript": data.feed.entry[i].gsx$說明.$t,
-            		};
-    		vs.push(v);
+        let v= data.feed.entry[i];
+        // state
+        if (typeof v.gsx$洲 === 'undefined' || v.gsx$洲 === null){
+        }else{
+          //console.log(v.gsx$洲.$t);
+          locstate.push(v.gsx$洲.$t);
+        }
+        // country
+        if (typeof v.gsx$國 === 'undefined' || v.gsx$國 === null){
+        }else{
+          loccountry.push(v.gsx$國.$t);
+        }
+        // place
+        if (typeof v.gsx$地點 === 'undefined' || v.gsx$地點 === null){
+        }else{
+          locplace.push(v.gsx$地點.$t);
+        }
+        // number
+        if (typeof v.gsx$地點編號 === 'undefined' || v.gsx$地點編號 === null){
+        }else{
+          let vallist = v.gsx$地點編號.$t.split(';');
+          //console.log(v.gsx$地點紅.$t);
+          vallist.forEach(function(vv,ii){
+            let val={
+                "locnum": int(vv),
+                "r": int(v.gsx$地點紅.$t),
+                "g": int(v.gsx$地點綠.$t),
+                "b": int(v.gsx$地點藍.$t)
+              };
+              vallocnum.push(val);
+            });
+        }
   		}
-      locmap=vs;
-  		basemap.location=vs;
+      //locmap=vs;
+  		basemap.location=vallocnum;
 }
 
 function encodep(data){
   		let vs = [];
 
   		for (let i = 0; i < data.feed.entry.length; i+=1) {
-  			let rule=[ data.feed.entry[i].gsx$地點1.$t,
-                       data.feed.entry[i].gsx$地點2.$t,
-                       data.feed.entry[i].gsx$地點3.$t,
-                       data.feed.entry[i].gsx$地點4.$t,
-                       data.feed.entry[i].gsx$地點5.$t,
-                       data.feed.entry[i].gsx$地點6.$t,
-                       data.feed.entry[i].gsx$地點7.$t,
-                       data.feed.entry[i].gsx$地點8.$t,
-                       data.feed.entry[i].gsx$地點9.$t,
-                       data.feed.entry[i].gsx$地點10.$t];
-        
-    		let  v= {	  "id": data.feed.entry[i].gsx$瑞安編號.$t,
+  			let r=[     data.feed.entry[i].gsx$可以前往1.$t,
+                    data.feed.entry[i].gsx$可以前往2.$t,
+                    data.feed.entry[i].gsx$可以前往3.$t,
+                    data.feed.entry[i].gsx$可以前往4.$t,
+                    data.feed.entry[i].gsx$可以前往5.$t,
+                    data.feed.entry[i].gsx$不可前往1.$t,
+                    data.feed.entry[i].gsx$不可前往2.$t,
+                    data.feed.entry[i].gsx$不可前往3.$t,
+                    data.feed.entry[i].gsx$不可前往4.$t,
+                    data.feed.entry[i].gsx$不可前往5.$t];
+        let okr=[];
+        let nr=[];
+        r.forEach(function (v,i){
+          if (i<5){
+            okr.push(v.split(';'));
+          }else{
+            nr.push(v.split(';'));
+          }
+        });
+
+    		let  v= {	  "id": int(data.feed.entry[i].gsx$瑞安編號.$t),
     					      "behavior": data.feed.entry[i].gsx$屬性.$t,
-                		"rule": rule,
-                		"currentX": data.feed.entry[i].gsx$索引橫.$t,
-                    "currentY": data.feed.entry[i].gsx$索引直.$t,
+                		"okrule": okr,
+                    "nonokrule": nr,
+                		"currentX": int(data.feed.entry[i].gsx$索引橫.$t),
+                    "currentY": int(data.feed.entry[i].gsx$索引直.$t),
                 		"pic": data.feed.entry[i].gsx$圖片.$t
             		};
 
@@ -145,6 +173,14 @@ function encodep(data){
       //pmap=vs;
   		basemap.person=vs;
 }
+
+function preload() {
+  
+  loadJSON(ssurlloc, encodeloc);
+  loadJSON(ssurlp, encodep);
+  loadJSON(ssurllocmap, encodelocmap);
+}
+
 
 function setup() {
   //imageMode(CENTER);
@@ -334,7 +370,7 @@ function LOCMAP(map){
 
 }
 */
-function LOCDOT(xid,yid,st,w=15,h=15){
+function LOCDOT(xid,yid,st,w=15,h=15,c=color(100,100,100,100),ls='州',lc='國',lp='點'){
   this.xid=xid;
   this.yid=yid;
   this.status=st;
@@ -342,11 +378,16 @@ function LOCDOT(xid,yid,st,w=15,h=15){
   this.w= w;
   this.h= h;
   this.d= this.h*0.8;
+  this.colordot=c;
 
   this.x=(this.xid+0.5)*this.w;
   this.y=(this.yid+0.5)*this.h;
   this.lux=this.x-(this.w/2);
   this.luy=this.y-(this.h/2);
+
+  this.state=ls;
+  this.country=lc;
+  this.place=lp;
 
   this.over=false;
   //this.status=0;
@@ -366,6 +407,14 @@ function LOCDOT(xid,yid,st,w=15,h=15){
   this.setD=function(d){
     this.d=d;
   }
+  this.setC=function(c){
+    this.colordot=c;
+  }
+  this.setdesc=function(ls,lc,lp){
+    this.state=ls;
+    this.country=lc;
+    this.place=lp;
+  }
   /* 
     status = 0 >>   不出現
     status = 1-9 >> 地點
@@ -379,7 +428,7 @@ function LOCDOT(xid,yid,st,w=15,h=15){
       fill(0);
       if (this.over){
         overloc=this; 
-        //text('('+overloc.x+','+overloc.y+')', 100,100);
+        text(this.state+'-'+this.country+'-'+this.place, this.x,this.y+this.d);
         noStroke();
         fill(50, 0, 50,225);
             
@@ -387,6 +436,8 @@ function LOCDOT(xid,yid,st,w=15,h=15){
         //text(this.descript, this.x+this.diameter,  this.y-(this.diameter/2));
 
         noStroke();
+        fill(this.colordot);
+        /*
         switch (this.status){
           case 1:
             fill(200, 200, 0,100);
@@ -413,10 +464,12 @@ function LOCDOT(xid,yid,st,w=15,h=15){
             fill(200, 200, 200,100);
             break;
         }
+        */
       }
       ellipse(this.x,this.y,this.d,this.d);
     }
   }
+
   this.display = function(){
     this.locmapEvent(this.status);
     
@@ -462,8 +515,8 @@ function PERSON(linklocdot){
     
           var exportout = {
                   data: this.printoutdata,
-                  sheetUrl: 'https://docs.google.com/spreadsheets/d/1-StkrwSEzLoA5s3AlcRp0RGJlSyU4_uwf4sz9fOB2yE//edit?usp=sharing',
-                sheetTag: '手臂動作'
+                  sheetUrl: 'https://docs.google.com/spreadsheets/d/1K2TH2v8jS_jixtg_2Z-Lm6VMTd7RujcplWWi9t624Ac/edit?usp=sharing',
+                sheetTag: 'action'
           };
           $.get(exeurl, exportout);
 
@@ -490,6 +543,7 @@ function PERSON(linklocdot){
     if (this.over){
       noStroke();
       fill(200, 0, 0);
+      text(this.behavior, this.x,  this.y-this.diameter);
       this.diametertol = 8;
       if (mouseIsPressed){
         this.x=mouseX;
@@ -505,7 +559,7 @@ function PERSON(linklocdot){
 
   this.display = function(){
     this.mosueEvent();
-    text(this.behavior, this.x+this.diameter,  this.y);
+    
     ellipse(this.x, this.y, this.diameter+this.diametertol, this.diameter+this.diametertol);
   }
 }
@@ -546,14 +600,16 @@ function LAYOUT(){
     for(let i=0;i<this.ybound;i+=1){
         
         for(let j=0;j<this.xbound;j+=1){
-          this.locmap.push(new LOCDOT(j,i,map.locationmap[i][j],this.locw,this.loch));
+          let locn = map.locationmap[i][j];
+          //console.log(int(locn/10)%100);
+          this.locmap.push(new LOCDOT(j,i,locn,this.locw,this.loch,this.getColor(locn),locstate[int(locn/1000)],loccountry[int(locn/10)%100],locplace[int(locn)%10]));
         }
     }
     // PERSON
     for(let i=0;i<this.map.person.length;i+=1){
         let locidx = int(this.map.person[i].currentX);
         let locidy = int(this.map.person[i].currentY);
-        console.log(this.locmap[locidx+this.xbound*locidy]);
+        //console.log(this.locmap[locidx+this.xbound*locidy]);
         
 
         let val = new PERSON(this.locmap[locidx+this.xbound*locidy]);
@@ -565,6 +621,20 @@ function LAYOUT(){
         this.pmap.push(val);
     }
   }
+  this.getColor = function(locnum){
+    let c = color(200,50,50,50);
+    //console.log(this.map.location.locnum);
+    for(let i=0;i<this.map.location.length;i+=1){
+      let v = this.map.location[i];
+      //console.log(locnum);
+      if (int(v.locnum)===int(locnum)){
+        c=color(v.r,v.g,v.b,50);
+        break;
+      }
+    }
+    return c;
+  }
+
   this.getIndexlocdot =function(xid,yid){
     return this.locmap[xid+yid*xbound];
   }
