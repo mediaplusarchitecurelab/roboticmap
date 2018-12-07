@@ -712,8 +712,18 @@ function LAYOUT(){
         let val = this.pmap[i];
         val.display();
       }
+    fill(50);
+    text('超完美工作機器人-瑞安，\n'+
+         '於2013年被生產，\n'+
+         '由於在人類世界工作大不易，\n'+
+         '因此開始拓展地域版圖，\n'+
+         '開啟隱藏版功能，成為現今多款機型。\n'+
+         '看更多5分鐘介紹影片\n\n'+
+         'https://www.youtube.com/watch?v=nLAfAYSb66k', 920,  820);
     
   }
+
+    
 }
 
 function RECORD(){
