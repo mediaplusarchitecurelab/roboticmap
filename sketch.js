@@ -152,10 +152,24 @@ function encodep(data){
         let okr=[];
         let nr=[];
         r.forEach(function (v,i){
+          let val=v.split(';');
+          let num = val[0].split(',');
           if (i<5){
-            okr.push(v.split(';'));
+            num.forEach(function (vv,ii){
+                okr.push({
+                  "number":vv,
+                  "reason":val[1]
+                });
+            });
+            
           }else{
-            nr.push(v.split(';'));
+
+            num.forEach(function (vv,ii){
+                nr.push({
+                  "number":vv,
+                  "reason":val[1]
+                });
+            });
           }
         });
 
@@ -370,7 +384,7 @@ function LOCMAP(map){
 
 }
 */
-function LOCDOT(xid,yid,st,w=15,h=15,c=color(100,100,100,100),ls='州',lc='國',lp='點'){
+function LOCDOT(xid,yid,st,w=15,h=15,c=color(100,100,100,100),ls='',lc='',lp=''){
   this.xid=xid;
   this.yid=yid;
   this.status=st;
@@ -492,35 +506,84 @@ function PERSON(linklocdot){
   this.selected=false;
   this.id=0;
   this.behavior='';
-  this.rule=[];
+  this.rule={};
   this.pic='';
   this.printoutdata='';
 
-  this.setRule = function(rule){
-    this.rule=rule;
+  this.setRule = function(okrule,nonokrule){
+    this.rule.okrule=okrule;
+    this.rule.nonokrule=nonokrule;
   }
   this.setId = function(id){
     this.id=id;
   }
-  this.setLocid = function(linklocdot){
-    // old
-      this.printoutdata= this.linklocdot.x + ',' + this.linklocdot.y+ ',';
-    // new
-    this.linklocdot=linklocdot;
-    this.x = this.linklocdot.x;
-    this.y = this.linklocdot.y;
-      this.printoutdata+= this.x + ',' + this.y;
 
-    // 輸出到spreadsheet
+  this.checkmove = function(linklocdot){
+
     
-          var exportout = {
-                  data: this.printoutdata,
-                  sheetUrl: 'https://docs.google.com/spreadsheets/d/1K2TH2v8jS_jixtg_2Z-Lm6VMTd7RujcplWWi9t624Ac/edit?usp=sharing',
-                sheetTag: 'action'
-          };
-          $.get(exeurl, exportout);
+    return str;
+  }
 
-    alert('uploaded'+'</br>'+this.printoutdata);
+
+  this.setLocid = function(linklocdot){
+    let str='';
+    // old
+    this.printoutdata= this.linklocdot.x + ',' + this.linklocdot.y+ ',';
+    console.log(linklocdot.status);
+    if (int(linklocdot.status)===8000){
+        str = this.behavior + ' 不可前往海洋';
+        this.x = this.linklocdot.x;
+        this.y = this.linklocdot.y;
+    }else{
+    
+        let movecheck = true;
+        
+        for (let i = 0;i<this.rule.nonokrule.length;i+=1){
+          let valr = this.rule.nonokrule[i];
+          //console.log(valr);
+          //console.log(linklocdot.status);
+
+          if ( int(valr.number) === int(linklocdot.status)){
+            str = this.behavior + ' 不可前往 ' + linklocdot.state + '-' + linklocdot.country + '-'  + linklocdot.place + '\n' + valr.reason;
+            movecheck = false;
+            this.x = this.linklocdot.x;
+            this.y = this.linklocdot.y;
+            break;
+          }
+        }
+        // 若可前進
+
+        if (movecheck){ 
+          str = this.behavior + ' 將前往 ' + linklocdot.state + '-' + linklocdot.country + '-'  + linklocdot.place + '\n';
+
+          for (let i = 0;i<this.rule.nonokrule.length;i+=1){
+
+            let valr = this.rule.okrule[i];
+
+            if ( int(valr.number) === int(linklocdot.status)){
+              console.log(valr.reason);
+              str = this.behavior + ' 將前往 ' + linklocdot.state + '-' + linklocdot.country + '-'  + linklocdot.place + '\n' + valr.reason;
+              movecheck = true;
+
+            }
+          }
+          //console.log('a');
+          
+          // new
+          this.linklocdot=linklocdot;
+          this.x = this.linklocdot.x;
+          this.y = this.linklocdot.y;
+          this.printoutdata+= this.x + ',' + this.y;
+          // 輸出到spreadsheet   
+              var exportout = {
+                      data: this.printoutdata,
+                      sheetUrl: 'https://docs.google.com/spreadsheets/d/1K2TH2v8jS_jixtg_2Z-Lm6VMTd7RujcplWWi9t624Ac/edit?usp=sharing',
+                    sheetTag: 'action'
+              };
+              $.get(exeurl, exportout);
+        }
+    }
+    alert(str);
 
  /*   
     console.log(this.rule);
@@ -602,7 +665,7 @@ function LAYOUT(){
         for(let j=0;j<this.xbound;j+=1){
           let locn = map.locationmap[i][j];
           //console.log(int(locn/10)%100);
-          this.locmap.push(new LOCDOT(j,i,locn,this.locw,this.loch,this.getColor(locn),locstate[int(locn/1000)],loccountry[int(locn/10)%100],locplace[int(locn)%10]));
+          this.locmap.push(new LOCDOT(j,i,locn,this.locw,this.loch,this.getColor(locn),locstate[int(locn/1000)-1],loccountry[int(locn/10)%100-1],locplace[int(locn)%10]));
         }
     }
     // PERSON
@@ -613,7 +676,7 @@ function LAYOUT(){
         
 
         let val = new PERSON(this.locmap[locidx+this.xbound*locidy]);
-        val.setRule( this.map.person[i].rule );
+        val.setRule( this.map.person[i].okrule, this.map.person[i].nonokrule);
         val.setId(this.map.person[i].id);
         val.setBehavior(this.map.person[i].behavior);
         val.setPic(this.map.person[i].pic);
