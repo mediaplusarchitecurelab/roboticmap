@@ -198,6 +198,7 @@ function preload() {
 
 
 function setup() {
+  //devicePixelScaling(false);
   //imageMode(CENTER);
   createCanvas(1200,900);
   // after loading
@@ -330,13 +331,24 @@ function draw() {
 
 function mouseReleased(){
   if (selecteditem.type === 'PERSON'){
-
+    
+    if (selecteditem.selected === true){
+      if (overloc){
+        selecteditem.setLocid(overloc);
+      }
+      selecteditem.selected=false;
+    }else{
+      selecteditem.selected=true;
+    }
+    /*
+    
     if (overloc){
       //console.log(overloc);
       selecteditem.setLocid(overloc);
     }else{
       //console.log('dd');
     }
+    */
   }
   selecteditem=false;
 }
@@ -437,21 +449,25 @@ function LOCDOT(xid,yid,st,w=15,h=15,c=color(100,100,100,100),ls='',lc='',lp='')
     
   */
   this.locmapEvent = function(st){
-    if (st === 0){}
-    else{
+    
+    //else{
       this.over = collidePointRect(mouseX,mouseY,this.lux,this.luy,this.w, this.h);
       fill(0);
       if (this.over){
-        overloc=this; 
-        text(this.state+'-'+this.country+'-'+this.place, this.x,this.y+this.d);
-        noStroke();
-        fill(50, 0, 50,225);
-            
+        
+          overloc=this; 
+          text(this.state+'-'+this.country+'-'+this.place, this.x,this.y+this.d);
+          noStroke();
+          fill(50, 0, 50,225);
+          ellipse(this.x,this.y,this.d,this.d); 
       }else{
         //text(this.descript, this.x+this.diameter,  this.y-(this.diameter/2));
-
-        noStroke();
-        fill(this.colordot);
+        if (st === 0){
+        }else{
+          noStroke();
+          fill(this.colordot);
+          ellipse(this.x,this.y,this.d,this.d);
+        }   
         /*
         switch (this.status){
           case 1:
@@ -480,8 +496,8 @@ function LOCDOT(xid,yid,st,w=15,h=15,c=color(100,100,100,100),ls='',lc='',lp='')
             break;
         }
         */
-      }
-      ellipse(this.x,this.y,this.d,this.d);
+      //}
+      
     }
   }
 
@@ -531,7 +547,7 @@ function PERSON(linklocdot){
     // old
     this.printoutdata= this.linklocdot.x + ',' + this.linklocdot.y+ ',';
     console.log(linklocdot.status);
-    if (int(linklocdot.status)===8000){
+    if (int(linklocdot.status)===0){
         str = this.behavior + ' 不可前往海洋';
         this.x = this.linklocdot.x;
         this.y = this.linklocdot.y;
@@ -620,6 +636,17 @@ function PERSON(linklocdot){
       fill(50, 50, 50);
       this.diametertol = 0;
     }
+
+    if (this.selected){
+      image(this.pic,20,620,240,240);
+      noStroke();
+      fill(200, 0, 0);
+      text(this.behavior, this.x,  this.y-this.diameter);
+      this.diametertol = 8;
+      this.x=mouseX;
+      this.y=mouseY;
+      selecteditem=this;
+    }
   }
 
   this.display = function(){
@@ -667,7 +694,7 @@ function LAYOUT(){
         for(let j=0;j<this.xbound;j+=1){
           let locn = map.locationmap[i][j];
           //console.log(int(locn/10)%100);
-          this.locmap.push(new LOCDOT(j,i,locn,this.locw,this.loch,this.getColor(locn),locstate[int(locn/1000)-1],loccountry[int(locn/10)%100-1],locplace[int(locn)%10]));
+          this.locmap.push(new LOCDOT(j,i,locn,this.locw,this.loch,this.getColor(locn),locstate[int(locn/1000)-1],loccountry[int(locn/10)%100-1],locplace[int(locn)%10-1]));
         }
     }
     // PERSON
