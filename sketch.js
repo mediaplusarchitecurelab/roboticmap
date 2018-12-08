@@ -75,6 +75,7 @@ var feedback='';
 var locstate =[];
 var loccountry =[];
 var locplace =[];
+var img;
 
 function encodelocmap(data){
       let vs = [];
@@ -604,6 +605,7 @@ function PERSON(linklocdot){
     this.over = collidePointCircle(mouseX,mouseY,this.x,this.y,this.diameter+this.diametertol);
 
     if (this.over){
+      image(this.pic,20,620,240,240);
       noStroke();
       fill(200, 0, 0);
       text(this.behavior, this.x,  this.y-this.diameter);
@@ -679,7 +681,11 @@ function LAYOUT(){
         val.setRule( this.map.person[i].okrule, this.map.person[i].nonokrule);
         val.setId(this.map.person[i].id);
         val.setBehavior(this.map.person[i].behavior);
-        val.setPic(this.map.person[i].pic);
+
+        pimg= loadImage(this.map.person[i].pic); 
+
+        val.setPic(pimg);
+
         
         this.pmap.push(val);
     }
