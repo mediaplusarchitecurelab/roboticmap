@@ -67,6 +67,7 @@ var bigRadius;
 
 var selecteditem=false;
 var overloc=false;
+var linkover=false;
 
 var exportval='';
 
@@ -75,7 +76,7 @@ var feedback='';
 var locstate =[];
 var loccountry =[];
 var locplace =[];
-var img;
+var img,logo;
 
 function encodelocmap(data){
       let vs = [];
@@ -202,7 +203,8 @@ function setup() {
   //imageMode(CENTER);
   createCanvas(1200,900);
   // after loading
-  layout.setbg(loadImage(bgpath));
+  layout.setlogo(loadImage('assets/img/logo.png'));
+
   layout.setmap(basemap);
 
   textAlign(LEFT,CENTER);
@@ -340,17 +342,13 @@ function mouseReleased(){
     }else{
       selecteditem.selected=true;
     }
-    /*
-    
-    if (overloc){
-      //console.log(overloc);
-      selecteditem.setLocid(overloc);
-    }else{
-      //console.log('dd');
-    }
-    */
+
   }
   selecteditem=false;
+
+  if (linkover){
+    window.open("https://www.youtube.com/watch?v=nLAfAYSb66k");
+  }
 }
 
 function getIndex(id) {
@@ -376,27 +374,9 @@ function DOT(x,y){
   }
 
   this.display = function(){
-    /*
-    noStroke();
-    fill(200, 0, 0);
-    ellipse(this.x, this.y, this.diameter, this.diameter);
-    */
   }
 }
-/*
-function LOCMAP(map){
-  this.map=map;
-  
-  this.display = function(){
-      for(let i=0;i<this.map.length;i+=1){
-        for(let j=0;j<this.map[i].length;j+=1){
 
-        }
-      }
-  }
-
-}
-*/
 function LOCDOT(xid,yid,st,w=15,h=15,c=color(100,100,100,100),ls='',lc='',lp=''){
   this.xid=xid;
   this.yid=yid;
@@ -417,7 +397,7 @@ function LOCDOT(xid,yid,st,w=15,h=15,c=color(100,100,100,100),ls='',lc='',lp='')
   this.place=lp;
 
   this.over=false;
-  //this.status=0;
+  this.dt=3;
   //console.log('a');
   
   this.setW=function(w){
@@ -455,11 +435,15 @@ function LOCDOT(xid,yid,st,w=15,h=15,c=color(100,100,100,100),ls='',lc='',lp='')
       fill(0);
       if (this.over){
         
-          overloc=this; 
-          text(this.state+'-'+this.country+'-'+this.place, this.x,this.y+this.d);
-          noStroke();
-          fill(50, 0, 50,225);
-          ellipse(this.x,this.y,this.d,this.d); 
+          overloc=this;
+          if (int(this.status)>0){ 
+            text(this.state+'-'+this.country+'-'+this.place, this.x,this.y+this.d);
+            noStroke();
+            fill(150, 0, 50,225);
+            ellipse(this.x,this.y,this.d+this.dt,this.d+this.dt); 
+          }
+          
+          
       }else{
         //text(this.descript, this.x+this.diameter,  this.y-(this.diameter/2));
         if (st === 0){
@@ -468,35 +452,6 @@ function LOCDOT(xid,yid,st,w=15,h=15,c=color(100,100,100,100),ls='',lc='',lp='')
           fill(this.colordot);
           ellipse(this.x,this.y,this.d,this.d);
         }   
-        /*
-        switch (this.status){
-          case 1:
-            fill(200, 200, 0,100);
-            break;
-          case 2:
-            fill(200, 0, 200,100);
-            break;
-          case 3:
-            fill(100, 0, 200,100);
-            break;
-          case 4:
-            fill(200, 100, 0,100);
-            break;
-          case 5:
-            fill(100, 0, 100,100);
-            break;
-          case 6:
-            fill(200, 0, 0,100);
-            break;
-          case 7:
-            fill(0, 0, 200,100);
-            break;
-          default:
-            fill(200, 200, 200,100);
-            break;
-        }
-        */
-      //}
       
     }
   }
@@ -621,6 +576,7 @@ function PERSON(linklocdot){
     this.over = collidePointCircle(mouseX,mouseY,this.x,this.y,this.diameter+this.diametertol);
 
     if (this.over){
+      tint(255, 255);
       image(this.pic,20,620,240,240);
       noStroke();
       fill(200, 0, 0);
@@ -638,6 +594,7 @@ function PERSON(linklocdot){
     }
 
     if (this.selected){
+      tint(255, 255);
       image(this.pic,20,620,240,240);
       noStroke();
       fill(200, 0, 0);
@@ -657,7 +614,7 @@ function PERSON(linklocdot){
 }
 
 function LAYOUT(){
-  this.bg;
+  this.logo;
   this.map={};
   this.pmap=[];
   this.locmap=[];
@@ -666,8 +623,8 @@ function LAYOUT(){
   this.locw=1;
   this.loch=1;
 
-  this.setbg=function(bg){
-    this.bg=bg;
+  this.setlogo=function(logo){
+    this.logo=logo;
   }
 
   this.setmap=function(map){
@@ -735,7 +692,7 @@ function LAYOUT(){
     return this.locmap[xid+yid*xbound];
   }
   this.display =function(){
-    background(225);
+    background(255);
     for(let i=0;i<this.locmap.length;i+=1){
         let val = this.locmap[i];
         val.display();
@@ -745,15 +702,31 @@ function LAYOUT(){
         let val = this.pmap[i];
         val.display();
       }
+
     fill(50);
-    text('超完美工作機器人-瑞安，\n'+
+
+    if (collidePointRect(mouseX,mouseY,1020,600, 240, 240)){
+      fill(150,0,0);
+      tint(255, 200);
+      linkover=true;
+
+      //createA('', '點我開啟!!', '_blank')
+    }else{
+      tint(255, 50);
+      linkover=false;
+    }
+
+    image(this.logo,1000,600,240,240);
+    text('超完美工作機器人-瑞安，\n\n'+
          '於2013年被生產，\n'+
          '由於在人類世界工作大不易，\n'+
          '因此開始拓展地域版圖，\n'+
-         '開啟隱藏版功能，成為現今多款機型。\n'+
-         '看更多5分鐘介紹影片\n\n'+
-         'https://www.youtube.com/watch?v=nLAfAYSb66k', 920,  820);
+         '開啟隱藏版功能，\n'+
+         '成為現今多款機型。\n\n'+
+         '點擊LOGO看更多5分鐘介紹影片', 870,  730);
     
+
+    //https://www.youtube.com/watch?v=nLAfAYSb66k
   }
 
     
